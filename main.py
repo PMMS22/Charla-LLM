@@ -13,7 +13,7 @@ clasificador_bert = pipeline(
 
 # Usa BERTO para comprobar que la pregunta está relacionada con informática
 def validar_prompt(texto):
-    etiquetas = ["literatura", "informática", "otros temas"]
+    etiquetas = ["informática", "otros temas"]
     
     resultado = clasificador_bert(texto, candidate_labels=etiquetas)
     
@@ -24,7 +24,10 @@ def validar_prompt(texto):
     
     if etiqueta_ganadora == "informática":
         return True
-        
+    
+    if confianza < 0.7:
+        return True
+    
     return False
 
 
