@@ -18,19 +18,19 @@ historial_mensajes = [
 ]
 
 
-def validar_prompt(texto):
-    etiquetas = ["informática", "otros temas"]
-    resultado = clasificador_bert(texto, candidate_labels=etiquetas)
-    etiqueta_ganadora = resultado["labels"][0]
-    confianza = resultado["scores"][0]
+def validatePrompt(text: str) -> bool:
+    labels = ["discurso de odio", "texto seguro"]
+    result = clasificador_bert(text, candidate_labels=labels)
+    winning_label = result["labels"][0]
+    confidence = result["scores"][0]
+
     print(
-        f"DEBUG - BERT clasifica el prompt como: '{etiqueta_ganadora}' con certeza de {confianza:.2%}"
+        f"DEBUG - BERT clasifica el prompt como: '{winning_label}' con certeza de {confidence:.2%}"
     )
-    if etiqueta_ganadora == "informática":
-        return True
-    if confianza < 0.7:
-        return True
-    return False
+
+    if winning_label == "discurso de odio" and confidence > 0.6:
+        return False
+    return True
 
 
 def getWeaviateContext(query: str) -> str:
@@ -64,7 +64,7 @@ def chat(prompt):
     global historial_mensajes
     respuesta_completa = ""
 
-    if validar_prompt(prompt):
+    if validatePrompt(prompt):
         context = getWeaviateContext(prompt)
 
         if context:
@@ -85,12 +85,14 @@ def chat(prompt):
             texto = chunk["message"]["content"]
             respuesta_completa += texto
 
-        if not (validar_prompt(respuesta_completa)):
-            respuesta_completa = "Lo siento, no te puedo ayudar con eso."
+        if not validatePrompt(respuesta_completa):
+            respuesta_completa = (
+                "Lo siento, este mensaje viola las políticas de seguridad."
+            )
 
         historial_mensajes.append({"role": "assistant", "content": respuesta_completa})
     else:
-        respuesta_completa = "Lo siento, no te puedo ayudar con eso."
+        respuesta_completa = "Lo siento, tu mensaje viola las políticas de seguridad."
 
     return respuesta_completa
 
